@@ -1,0 +1,2 @@
+﻿Get-ChildItem -Path "C:\Users\Public\Documents\Hyper-V\Virtual hard disks" | Where-Object {$_.Name -like "*vyos*" -and $_.Name -notlike "*vyOS_template*"} | Remove-Item -Force
+Get-ChildItem -Path "C:\Users\Public\Documents\Hyper-V\Virtual hard disks"

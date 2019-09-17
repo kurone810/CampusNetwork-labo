@@ -1,0 +1,2 @@
+﻿Get-ChildItem -Path "C:\Users\Public\Documents\Hyper-V\Virtual hard disks" | Where-Object {$_.Name -like "*CentOS*" -and $_.Name -ne "CentOS7-1804"} | Remove-Item -Force
+Get-ChildItem -Path "C:\Users\Public\Documents\Hyper-V\Virtual hard disks"
