@@ -2,11 +2,11 @@ param(
     #VYOS Deploy Parameters
     $vhdpath = "C:\Users\Public\Documents\Hyper-V\Virtual hard disks\",    
     $imagepath = "C:\ISO\CentOS-7-x86_64-DVD-1804.iso",
-    $Dmz_VM01_name = "DmzCentOS01",
-    $SiteA_VM01_name = "SiteACentOS01",
-    $SiteA_VM02_name = "SiteACentOS02",
-    $SiteB_VM01_name = "SiteBCentOS01",
-    $SiteB_VM02_name = "SiteBCentOS02",
+    $Dmz_VM01_name = "DmzCentOS01-labo",
+    $SiteA_VM01_name = "SiteACentOS01-labo",
+    $SiteA_VM02_name = "SiteACentOS02-labo",
+    $SiteB_VM01_name = "SiteBCentOS01-labo",
+    $SiteB_VM02_name = "SiteBCentOS02-labo",
 
     #Resouces Parameters
     [System.UInt64]

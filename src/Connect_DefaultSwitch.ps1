@@ -1,17 +1,17 @@
 param(
     #Centos Name Parameters ※Dependency
-    $Dmz_VM01_name = "DmzCentOS01",
-    $SiteA_VM01_name = "SiteACentOS01",
-    $SiteA_VM02_name = "SiteACentOS02",
-    $SiteB_VM01_name = "SiteBCentOS01",
-    $SiteB_VM02_name = "SiteBCentOS02",
+    $Dmz_VM01_name = "DmzCentOS01-labo",
+    $SiteA_VM01_name = "SiteACentOS01-labo",
+    $SiteA_VM02_name = "SiteACentOS02-labo",
+    $SiteB_VM01_name = "SiteBCentOS01-labo",
+    $SiteB_VM02_name = "SiteBCentOS02-labo",
 
     #Vyos Name Parameters 
-    $Ex_vyos01_name = "ExVyOS01",
-    $Ex_vyos02_name = "ExVyOS02",
-    $SiteA_vyos01_name = "SiteAVyOS01",
-    $SiteA_vyos02_name = "SiteAVyOS02",
-    $SiteB_vyos01_name = "SiteBVyOS01",
+    $Ex_vyos01_name = "ExVyOS01-labo",
+    $Ex_vyos02_name = "ExVyOS02-labo",
+    $SiteA_vyos01_name = "SiteAVyOS01-labo",
+    $SiteA_vyos02_name = "SiteAVyOS02-labo",
+    $SiteB_vyos01_name = "SiteBVyOS01-labo",
 
     #Switchname ※Dependency
     $DefaultSwitchname = "Default Switch",

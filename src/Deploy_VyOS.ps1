@@ -2,11 +2,11 @@ param(
     #VYOS Deploy Parameters
     $vhdpath = "C:\Users\Public\Documents\Hyper-V\Virtual hard disks\",    
     $vyosimagepath = "C:\ISO\vyos-1.1.8-amd64.iso",
-    $Ex_vyos01_name = "ExVyOS01",
-    $Ex_vyos02_name = "ExVyOS02",
-    $SiteA_vyos01_name = "SiteAVyOS01",
-    $SiteA_vyos02_name = "SiteAVyOS02",
-    $SiteB_vyos01_name = "SiteBVyOS01",
+    $Ex_vyos01_name = "ExVyOS01-labo",
+    $Ex_vyos02_name = "ExVyOS02-labo",
+    $SiteA_vyos01_name = "SiteAVyOS01-labo",
+    $SiteA_vyos02_name = "SiteAVyOS02-labo",
+    $SiteB_vyos01_name = "SiteBVyOS01-labo",
 
     #Resouces Parameters
     [System.UInt64]
