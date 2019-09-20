@@ -11,7 +11,7 @@
             break;
         }
     }else{
-        Write-host "hyperstatus:OK" -ForegroundColor Blue
+        Write-host "hyperstatus:ok" -ForegroundColor Blue
     }
 
 }catch {
