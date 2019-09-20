@@ -11,7 +11,7 @@
             break;
         }
     }else{
-        Write-host "Hyper-Vは有効化されています。" -ForegroundColor Yellow
+        Write-host "hyperstatus:OK" -ForegroundColor Blue
     }
 
 }catch {
