@@ -15,7 +15,6 @@
     }
 
 }catch {
-    Write-Host "test"
     Write-Host "エラー: $err" -ForegroundColor Red
 }
 
