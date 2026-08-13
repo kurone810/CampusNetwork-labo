@@ -1,59 +1,39 @@
-param(
-    #Centos Name Parameters ※Dependency
-    $Dmz_VM01_name = "DmzCentOS01-labo",
-    $SiteA_VM01_name = "SiteACentOS01-labo",
-    $SiteA_VM02_name = "SiteACentOS02-labo",
-    $SiteB_VM01_name = "SiteBCentOS01-labo",
-    $SiteB_VM02_name = "SiteBCentOS02-labo",
+#requires -Version 5.1
+#requires -RunAsAdministrator
+<#
+.SYNOPSIS
+    全 VM を Default Switch に接続します。
+.DESCRIPTION
+    各 VM の既定 NIC を Default Switch に接続し、外部（インターネット）接続を可能にします。
+    日本語 OS の場合は config.ps1 の $script:DefaultNicName を "ネットワーク アダプター" に変更してください。
+#>
 
-    #Vyos Name Parameters 
-    $Ex_vyos01_name = "ExVyOS01-labo",
-    $Ex_vyos02_name = "ExVyOS02-labo",
-    $SiteA_vyos01_name = "SiteAVyOS01-labo",
-    $SiteA_vyos02_name = "SiteAVyOS02-labo",
-    $SiteB_vyos01_name = "SiteBVyOS01-labo",
+$ErrorActionPreference = "Stop"
 
-    #Switchname ※Dependency
-    $DefaultSwitchname = "Default Switch",
+$CommonPath = Join-Path -Path $PSScriptRoot -ChildPath "common.ps1"
+. $CommonPath
 
-    #Network Adapter  
-    $DefaultNetworkAdapter = "ネットワーク アダプター"
-)
+try {
+    Write-LabLog -Message "=== Default Switch への接続を開始します ===" -Level Info
 
+    foreach ($VMName in $script:AllVMs) {
+        $VM = Get-VM -Name $VMName -ErrorAction SilentlyContinue
+        if (-not $VM) {
+            Write-LabLog -Message "VM '$VMName' が見つかりません。" -Level Warning
+            continue
+        }
 
+        $Nic = Get-VMNetworkAdapter -VMName $VMName -Name $script:DefaultNicName -ErrorAction SilentlyContinue
+        if (-not $Nic) {
+            Write-LabLog -Message "VM '$VMName' の NIC '$($script:DefaultNicName)' が見つかりません。" -Level Warning
+            continue
+        }
 
-#Create Centos NetworkAdapter And Connect
-#Add-VMNetworkAdapter $Dmz_VM01_name -Name $DefaultNetworkAdapter
-Connect-VMNetworkAdapter -VMName $Dmz_VM01_name -Name $DefaultNetworkAdapter -SwitchName $DefaultSwitchname
-
-#Add-VMNetworkAdapter $SiteA_VM01_name -Name $DefaultNetworkAdapter
-Connect-VMNetworkAdapter -VMName $SiteA_VM01_name -Name $DefaultNetworkAdapter -SwitchName $DefaultSwitchname
-
-#Add-VMNetworkAdapter $SiteA_VM02_name -Name $DefaultNetworkAdapter
-Connect-VMNetworkAdapter -VMName $SiteA_VM02_name -Name $DefaultNetworkAdapter -SwitchName $DefaultSwitchname
-
-#Add-VMNetworkAdapter $SiteB_VM01_name -Name $DefaultNetworkAdapter
-Connect-VMNetworkAdapter -VMName $SiteB_VM01_name -Name $DefaultNetworkAdapter -SwitchName $DefaultSwitchname
-
-#Add-VMNetworkAdapter $SiteB_VM02_name -Name $DefaultNetworkAdapter
-Connect-VMNetworkAdapter -VMName $SiteB_VM02_name -Name $DefaultNetworkAdapter -SwitchName $DefaultSwitchname
-
-#Create vyos NetworkAdapter And Connect
-
-#Add-VMNetworkAdapter $Ex_vyos01_name -Name $DefaultNetworkAdapter
-Connect-VMNetworkAdapter -VMName $Ex_vyos01_name -Name $DefaultNetworkAdapter -SwitchName $DefaultSwitchname
-
-#Add-VMNetworkAdapter $Ex_vyos02_name -Name $DefaultNetworkAdapter
-Connect-VMNetworkAdapter -VMName $Ex_vyos02_name -Name $DefaultNetworkAdapter -SwitchName $DefaultSwitchname
-
-#Add-VMNetworkAdapter $SiteA_vyos01_name -Name $DefaultNetworkAdapter
-Connect-VMNetworkAdapter -VMName $SiteA_vyos01_name -Name $DefaultNetworkAdapter -SwitchName $DefaultSwitchname
-
-#Add-VMNetworkAdapter $SiteA_vyos02_name -Name $DefaultNetworkAdapter
-Connect-VMNetworkAdapter -VMName $SiteA_vyos02_name -Name $DefaultNetworkAdapter -SwitchName $DefaultSwitchname
-
-#Add-VMNetworkAdapter $SiteB_vyos01_name -Name $DefaultNetworkAdapter
-Connect-VMNetworkAdapter -VMName $SiteB_vyos01_name -Name $DefaultNetworkAdapter -SwitchName $DefaultSwitchname
-
-#Get-VM | Where-Object {$_.Name -like "*CentOS*"} | Start-VM
-#Get-VM
+        Connect-VMNetworkAdapter -VMName $VMName -Name $script:DefaultNicName -SwitchName $script:DefaultSwitchName -ErrorAction Stop
+        Write-LabLog -Message "VM '$VMName' を '$($script:DefaultSwitchName)' に接続しました。" -Level Success
+    }
+}
+catch {
+    Write-LabLog -Message "Default Switch 接続中にエラーが発生しました: $_" -Level Error
+    exit 1
+}

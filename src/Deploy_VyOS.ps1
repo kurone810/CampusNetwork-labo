@@ -1,107 +1,125 @@
-param(
-    #VYOS Deploy Parameters
-    $vhdpath = "C:\Users\Public\Documents\Hyper-V\Virtual hard disks\",    
-    $vyosimagepath = "C:\ISO\vyos-1.1.8-amd64.iso",
-    $Ex_vyos01_name = "ExVyOS01-labo",
-    $Ex_vyos02_name = "ExVyOS02-labo",
-    $SiteA_vyos01_name = "SiteAVyOS01-labo",
-    $SiteA_vyos02_name = "SiteAVyOS02-labo",
-    $SiteB_vyos01_name = "SiteBVyOS01-labo",
+#requires -Version 5.1
+#requires -RunAsAdministrator
+<#
+.SYNOPSIS
+    VyOS ルーター VM を作成します。
+.DESCRIPTION
+    最新 VyOS 用に Generation 2 VM を作成し、NIC を接続します。
+.NOTES
+    Windows 11 / Windows PowerShell 5.1 / PowerShell 7 両対応。
+    ISO パスは config.ps1 の $script:VyOSIsoPath を参照します。
+#>
 
-    #Resouces Parameters
-    [System.UInt64]
-    $init_ALL_vyosVHDSize = 10GB,
-    $init_External_vyosmemorySize = 256MB,
-    $init_internal_vyosmemorySize = 256MB,
-    
-    #Switchname ※Dependency
-    $EXTSwitchname01 = "EXTSW01",
-    $CORSwitchname01 = "CORSW01",
-    $DMZSwitchname01 = "DMZSW01",
-    $siteA_INTSwitchname01 = "siteA-INTSW01",
-    $siteB_INTSwitchname01 = "siteB-INTSW01",
+$ErrorActionPreference = "Stop"
 
-    #Network Adapter  
-    $EXTNetworkAdapter01 = "EXT-NIC01",
-    $CORNetworkAdapter01 = "COR-NIC01",
-    $DMZNetworkAdapter01 = "DMZ-NIC01",
-    $INTNetworkAdapter01 = "INT-NIC01"
-)
+# 共通設定・関数を読み込み
+$CommonPath = Join-Path -Path $PSScriptRoot -ChildPath "common.ps1"
+. $CommonPath
 
+try {
+    Write-LabLog -Message "=== VyOS VM の作成を開始します ===" -Level Info
 
-#Create Virtual HDD
-New-VHD -Path "$vhdpath$Ex_vyos01_name.vhdx" -SizeBytes $init_ALL_vyosVHDSize
+    # ISO ファイル存在確認
+    if (-not (Test-Path -Path $script:VyOSIsoPath)) {
+        throw "VyOS ISO が見つかりません: $($script:VyOSIsoPath)"
+    }
 
-New-VHD -Path "$vhdpath$Ex_vyos02_name.vhdx" -SizeBytes $init_ALL_vyosVHDSize
+    # cloud-init seed.iso 生成（テンプレートがあれば）
+    if (Test-Path -Path $script:VyOSCloudInitTemplateDir) {
+        New-LabVyOSSeedIso -OutputPath $script:VyOSSeedIsoPath -TemplateDir $script:VyOSCloudInitTemplateDir
+    }
+    else {
+        Write-LabLog -Message "cloud-init テンプレートが見つからないため、seed.iso は生成しません。" -Level Warning
+    }
 
-New-VHD -Path "$vhdpath$SiteA_vyos01_name.vhdx" -SizeBytes $init_ALL_vyosVHDSize
+    # VM 定義：名前、メモリ、接続する NIC とスイッチ
+    $VyOSDefinitions = @(
+        @{
+            Name   = $script:ExVyOS01Name
+            Memory = $script:VyOSExtMemory
+            NICs   = @(
+                @{ Name = $script:ExtNicName; Switch = $script:EXTSwitchName },
+                @{ Name = $script:CorNicName; Switch = $script:CORSwitchName },
+                @{ Name = $script:DmzNicName; Switch = $script:DMZSwitchName }
+            )
+        },
+        @{
+            Name   = $script:ExVyOS02Name
+            Memory = $script:VyOSExtMemory
+            NICs   = @(
+                @{ Name = $script:ExtNicName; Switch = $script:EXTSwitchName },
+                @{ Name = $script:CorNicName; Switch = $script:CORSwitchName },
+                @{ Name = $script:DmzNicName; Switch = $script:DMZSwitchName }
+            )
+        },
+        @{
+            Name   = $script:SiteAVyOS01Name
+            Memory = $script:VyOSIntMemory
+            NICs   = @(
+                @{ Name = $script:CorNicName; Switch = $script:CORSwitchName },
+                @{ Name = $script:IntNicName; Switch = $script:SiteAIntSwitchName }
+            )
+        },
+        @{
+            Name   = $script:SiteAVyOS02Name
+            Memory = $script:VyOSIntMemory
+            NICs   = @(
+                @{ Name = $script:CorNicName; Switch = $script:CORSwitchName },
+                @{ Name = $script:IntNicName; Switch = $script:SiteAIntSwitchName }
+            )
+        },
+        @{
+            Name   = $script:SiteBVyOS01Name
+            Memory = $script:VyOSIntMemory
+            NICs   = @(
+                @{ Name = $script:CorNicName; Switch = $script:CORSwitchName },
+                @{ Name = $script:IntNicName; Switch = $script:SiteBIntSwitchName }
+            )
+        }
+    )
 
-New-VHD -Path "$vhdpath$SiteA_vyos02_name.vhdx" -SizeBytes $init_ALL_vyosVHDSize
+    foreach ($Def in $VyOSDefinitions) {
+        # VHD 作成
+        $VhdPath = New-LabVHD -VMName $Def.Name -SizeBytes $script:VyOSVhdSize
 
-New-VHD -Path "$vhdpath$SiteB_vyos01_name.vhdx" -SizeBytes $init_ALL_vyosVHDSize
+        # VM 作成
+        New-LabVM -Name $Def.Name -MemoryStartupBytes $Def.Memory -VhdPath $VhdPath -Generation $script:VmGeneration
 
-#Create VM
-New-VM -Name $Ex_vyos01_name -MemoryStartupBytes $init_External_vyosmemorySize `
--VHDPath "$vhdpath$Ex_vyos01_name.vhdx" `
--Generation 1 -BootDevice CD
+        # ISO マウント（VyOS インストール ISO）
+        Mount-LabIso -VMName $Def.Name -IsoPath $script:VyOSIsoPath
 
-New-VM -Name $Ex_vyos02_name -MemoryStartupBytes $init_External_vyosmemorySize `
--VHDPath "$vhdpath$Ex_vyos02_name.vhdx" `
--Generation 1 -BootDevice CD
+        # cloud-init seed.iso を 2 台目の DVD ドライブとしてマウント
+        if (Test-Path -Path $script:VyOSSeedIsoPath) {
+            try {
+                Add-VMDvdDrive -VMName $Def.Name -Path $script:VyOSSeedIsoPath -ErrorAction Stop
+                Write-LabLog -Message "VM '$($Def.Name)' に seed.iso をマウントしました。" -Level Success
+            }
+            catch {
+                Write-LabLog -Message "VM '$($Def.Name)' への seed.iso マウントに失敗しました: $_" -Level Warning
+            }
+        }
 
-New-VM -Name $SiteA_vyos01_name -MemoryStartupBytes $init_Internal_vyosmemorySize `
--VHDPath "$vhdpath$SiteA_vyos01_name.vhdx" `
--Generation 1 -BootDevice CD
+        # NIC 追加・接続
+        foreach ($Nic in $Def.NICs) {
+            Add-LabVMNetworkAdapter -VMName $Def.Name -AdapterName $Nic.Name
+            Connect-LabVMNetworkAdapter -VMName $Def.Name -AdapterName $Nic.Name -SwitchName $Nic.Switch
+        }
+    }
 
-New-VM -Name $SiteA_vyos02_name -MemoryStartupBytes $init_Internal_vyosmemorySize `
--VHDPath "$vhdpath$SiteA_vyos02_name.vhdx" `
--Generation 1 -BootDevice CD
+    # 全 VyOS VM を起動
+    $script:AllVyOSVMs | ForEach-Object {
+        $VM = Get-VM -Name $_ -ErrorAction SilentlyContinue
+        if ($VM -and $VM.State -ne "Running") {
+            Start-VM -Name $_ -ErrorAction Stop
+            Write-LabLog -Message "VM '$_' を起動しました。" -Level Success
+        }
+    }
 
-New-VM -Name $SiteB_vyos01_name -MemoryStartupBytes $init_Internal_vyosmemorySize `
--VHDPath "$vhdpath$SiteB_vyos01_name.vhdx" `
--Generation 1 -BootDevice CD
+    Get-VM | Where-Object { $_.Name -in $script:AllVyOSVMs } | Format-Table Name, State, Uptime, MemoryAssigned -AutoSize
 
-#ISO-imageDrive-mount
-Set-VMDvdDrive $Ex_vyos01_name -Path $vyosimagepath
-
-Set-VMDvdDrive $Ex_vyos02_name -Path $vyosimagepath
-
-Set-VMDvdDrive $SiteA_vyos01_name -Path $vyosimagepath
-
-Set-VMDvdDrive $SiteA_vyos02_name -Path $vyosimagepath
-
-Set-VMDvdDrive $SiteB_vyos01_name -Path $vyosimagepath
-
-#Create NetworkAdapter And Connect
-Add-VMNetworkAdapter $Ex_vyos01_name -Name $EXTNetworkAdapter01
-Add-VMNetworkAdapter $Ex_vyos01_name -Name $CORNetworkAdapter01
-Add-VMNetworkAdapter $Ex_vyos01_name -Name $DMZNetworkAdapter01
-Connect-VMNetworkAdapter -VMName $Ex_vyos01_name -Name $EXTNetworkAdapter01 -SwitchName $EXTSwitchname01
-Connect-VMNetworkAdapter -VMName $Ex_vyos01_name -Name $CORNetworkAdapter01 -SwitchName $CORSwitchname01
-Connect-VMNetworkAdapter -VMName $Ex_vyos01_name -Name $DMZNetworkAdapter01 -SwitchName $DMZSwitchname01
-
-Add-VMNetworkAdapter $Ex_vyos02_name -Name $EXTNetworkAdapter01
-Add-VMNetworkAdapter $Ex_vyos02_name -Name $CORNetworkAdapter01
-Add-VMNetworkAdapter $Ex_vyos02_name -Name $DMZNetworkAdapter01
-Connect-VMNetworkAdapter -VMName $Ex_vyos02_name -Name $EXTNetworkAdapter01 -SwitchName $EXTSwitchname01
-Connect-VMNetworkAdapter -VMName $Ex_vyos02_name -Name $CORNetworkAdapter01 -SwitchName $CORSwitchname01
-Connect-VMNetworkAdapter -VMName $Ex_vyos02_name -Name $DMZNetworkAdapter01 -SwitchName $DMZSwitchname01
-
-Add-VMNetworkAdapter $SiteA_vyos01_name -Name $CORNetworkAdapter01
-Add-VMNetworkAdapter $SiteA_vyos01_name -Name $INTNetworkAdapter01
-Connect-VMNetworkAdapter -VMName $SiteA_vyos01_name -Name $CORNetworkAdapter01 -SwitchName $CORSwitchname01
-Connect-VMNetworkAdapter -VMName $SiteA_vyos01_name -Name $INTNetworkAdapter01 -SwitchName $siteA_INTSwitchname01
-
-Add-VMNetworkAdapter $SiteA_vyos02_name -Name $CORNetworkAdapter01
-Add-VMNetworkAdapter $SiteA_vyos02_name -Name $INTNetworkAdapter01
-Connect-VMNetworkAdapter -VMName $SiteA_vyos02_name -Name $CORNetworkAdapter01 -SwitchName $CORSwitchname01
-Connect-VMNetworkAdapter -VMName $SiteA_vyos02_name -Name $INTNetworkAdapter01 -SwitchName $siteA_INTSwitchname01
-
-Add-VMNetworkAdapter $SiteB_vyos01_name -Name $CORNetworkAdapter01
-Add-VMNetworkAdapter $SiteB_vyos01_name -Name $INTNetworkAdapter01
-Connect-VMNetworkAdapter -VMName $SiteB_vyos01_name -Name $CORNetworkAdapter01 -SwitchName $CORSwitchname01
-Connect-VMNetworkAdapter -VMName $SiteB_vyos01_name -Name $INTNetworkAdapter01 -SwitchName $siteB_INTSwitchname01
-
-
-Get-VM | Where-Object {$_.Name -like "*VyOS*"} | Start-VM
-Get-VM
+    Write-LabLog -Message "=== VyOS VM の作成が完了しました ===" -Level Success
+}
+catch {
+    Write-LabLog -Message "VyOS VM 作成中にエラーが発生しました: $_" -Level Error
+    exit 1
+}

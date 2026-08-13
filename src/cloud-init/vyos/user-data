@@ -1,0 +1,39 @@
+#cloud-config
+#
+# VyOS cloud-init NoCloud 設定例
+# VyOS 1.3 / 1.4 系で動作確認を想定
+#
+# 注意:
+#   - このファイルはテンプレートです。実際の環境に合わせて編集してください。
+#   - パスワードは検証用です。本番環境では変更してください。
+
+hostname: vyos-labo
+fqdn: vyos-labo.local
+
+users:
+  - name: vyos
+    plain_text_passwd: vyos
+    lock_passwd: false
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_authorized_keys: []
+
+chpasswd:
+  list: |
+    vyos:vyos
+  expire: false
+
+ssh_pwauth: true
+
+# VyOS 設定コマンド
+# 各 NIC に DHCP で IP を取得させ、SSH を有効化する最小構成
+vyos_config_commands:
+  - set system host-name 'vyos-labo'
+  - set service ssh port '22'
+  - set interfaces ethernet eth0 address 'dhcp'
+  - set interfaces ethernet eth1 address 'dhcp'
+  - set interfaces ethernet eth2 address 'dhcp'
+
+# 必要に応じて静的 IP や OSPF/BGP 設定を追加してください
+# 例:
+#   - set interfaces ethernet eth0 address '192.168.10.1/24'
+#   - set protocols ospf area 0 network '192.168.10.0/24'
