@@ -1,89 +1,92 @@
-param(
-    #VYOS Deploy Parameters
-    $vhdpath = "C:\Users\Public\Documents\Hyper-V\Virtual hard disks\",    
-    $imagepath = "C:\ISO\CentOS-7-x86_64-DVD-1804.iso",
-    $Dmz_VM01_name = "DmzCentOS01-labo",
-    $SiteA_VM01_name = "SiteACentOS01-labo",
-    $SiteA_VM02_name = "SiteACentOS02-labo",
-    $SiteB_VM01_name = "SiteBCentOS01-labo",
-    $SiteB_VM02_name = "SiteBCentOS02-labo",
+#requires -Version 5.1
+#requires -RunAsAdministrator
+<#
+.SYNOPSIS
+    Linux サーバー VM を作成します。
+.DESCRIPTION
+    CentOS の後継ディストリビューション（AlmaLinux / Rocky Linux / CentOS Stream 等）
+    用に Generation 2 VM を作成し、NIC を接続します。
+.NOTES
+    Windows 11 / Windows PowerShell 5.1 / PowerShell 7 両対応。
+    ISO パスは config.ps1 の $script:LinuxIsoPath を参照します。
+#>
 
-    #Resouces Parameters
-    [System.UInt64]
-    $init_ALL_VHDSize = 20GB,
-    $init_Dmz_memorySize = 2048MB,
-    $init_internal_memorySize = 2048MB,
-    
-    #Switchname ※Dependency
-    $DMZSwitchname01 = "DMZSW01",
-    $siteA_INTSwitchname01 = "siteA-INTSW01",
-    $siteB_INTSwitchname01 = "siteB-INTSW01",
+$ErrorActionPreference = "Stop"
 
-    #Network Adapter  
-    $DMZNetworkAdapter01 = "DMZ-NIC01",
-    $INTNetworkAdapter01 = "INT-NIC01"
-)
+# 共通設定・関数を読み込み
+$CommonPath = Join-Path -Path $PSScriptRoot -ChildPath "common.ps1"
+. $CommonPath
 
+try {
+    Write-LabLog -Message "=== Linux VM の作成を開始します ===" -Level Info
 
-#Create Virtual HDD
-New-VHD -Path "$vhdpath$Dmz_VM01_name.vhdx" -SizeBytes $init_ALL_VHDSize
+    # ISO ファイル存在確認
+    if (-not (Test-Path -Path $script:LinuxIsoPath)) {
+        throw "Linux ISO が見つかりません: $($script:LinuxIsoPath)"
+    }
 
-New-VHD -Path "$vhdpath$SiteA_VM01_name.vhdx" -SizeBytes $init_ALL_VHDSize
+    # VM 定義：名前、メモリ、接続する NIC とスイッチ
+    $LinuxDefinitions = @(
+        @{
+            Name   = $script:DmzCentOSName
+            Memory = $script:DmzLinuxMemory
+            NICs   = @(
+                @{ Name = $script:DmzNicName; Switch = $script:DMZSwitchName }
+            )
+        },
+        @{
+            Name   = $script:SiteACentOS01Name
+            Memory = $script:IntLinuxMemory
+            NICs   = @(
+                @{ Name = $script:IntNicName; Switch = $script:SiteAIntSwitchName }
+            )
+        },
+        @{
+            Name   = $script:SiteACentOS02Name
+            Memory = $script:IntLinuxMemory
+            NICs   = @(
+                @{ Name = $script:IntNicName; Switch = $script:SiteAIntSwitchName }
+            )
+        },
+        @{
+            Name   = $script:SiteBCentOS01Name
+            Memory = $script:IntLinuxMemory
+            NICs   = @(
+                @{ Name = $script:IntNicName; Switch = $script:SiteBIntSwitchName }
+            )
+        },
+        @{
+            Name   = $script:SiteBCentOS02Name
+            Memory = $script:IntLinuxMemory
+            NICs   = @(
+                @{ Name = $script:IntNicName; Switch = $script:SiteBIntSwitchName }
+            )
+        }
+    )
 
-New-VHD -Path "$vhdpath$SiteA_VM02_name.vhdx" -SizeBytes $init_ALL_VHDSize
+    foreach ($Def in $LinuxDefinitions) {
+        # VHD 作成
+        $VhdPath = New-LabVHD -VMName $Def.Name -SizeBytes $script:LinuxVhdSize
 
-New-VHD -Path "$vhdpath$SiteB_VM01_name.vhdx" -SizeBytes $init_ALL_VHDSize
+        # VM 作成
+        New-LabVM -Name $Def.Name -MemoryStartupBytes $Def.Memory -VhdPath $VhdPath -Generation $script:VmGeneration
 
-New-VHD -Path "$vhdpath$SiteB_VM02_name.vhdx" -SizeBytes $init_ALL_VHDSize
+        # ISO マウント
+        Mount-LabIso -VMName $Def.Name -IsoPath $script:LinuxIsoPath
 
-#Create VM
-New-VM -Name $Dmz_VM01_name -MemoryStartupBytes $init_Dmz_memorySize `
--VHDPath "$vhdpath$Dmz_VM01_name.vhdx" `
--Generation 1 -BootDevice CD
+        # NIC 追加・接続
+        foreach ($Nic in $Def.NICs) {
+            Add-LabVMNetworkAdapter -VMName $Def.Name -AdapterName $Nic.Name
+            Connect-LabVMNetworkAdapter -VMName $Def.Name -AdapterName $Nic.Name -SwitchName $Nic.Switch
+        }
+    }
 
-New-VM -Name $SiteA_VM01_name -MemoryStartupBytes $init_internal_memorySize `
--VHDPath "$vhdpath$SiteA_VM01_name.vhdx" `
--Generation 1 -BootDevice CD
+    Get-VM | Where-Object { $_.Name -in $script:AllLinuxVMs } | Format-Table Name, State, Uptime, MemoryAssigned -AutoSize
 
-New-VM -Name $SiteA_VM02_name -MemoryStartupBytes $init_internal_memorySize `
--VHDPath "$vhdpath$SiteA_VM02_name.vhdx" `
--Generation 1 -BootDevice CD
-
-New-VM -Name $SiteB_VM01_name -MemoryStartupBytes $init_internal_memorySize `
--VHDPath "$vhdpath$SiteB_VM01_name.vhdx" `
--Generation 1 -BootDevice CD
-
-New-VM -Name $SiteB_VM02_name -MemoryStartupBytes $init_internal_memorySize `
--VHDPath "$vhdpath$SiteB_VM02_name.vhdx" `
--Generation 1 -BootDevice CD
-
-#ISO-imageDrive-mount
-Set-VMDvdDrive $Dmz_VM01_name -Path $imagepath
-
-Set-VMDvdDrive $SiteA_VM01_name -Path $imagepath
-
-Set-VMDvdDrive $SiteA_VM02_name -Path $imagepath
-
-Set-VMDvdDrive $SiteB_VM01_name -Path $imagepath
-
-Set-VMDvdDrive $SiteB_VM02_name -Path $imagepath
-
-#Create NetworkAdapter And Connect
-Add-VMNetworkAdapter $Dmz_VM01_name -Name $DMZNetworkAdapter01
-Connect-VMNetworkAdapter -VMName $Dmz_VM01_name -Name $DMZNetworkAdapter01 -SwitchName $DMZSwitchname01
-
-Add-VMNetworkAdapter $SiteA_VM01_name -Name $INTNetworkAdapter01
-Connect-VMNetworkAdapter -VMName $SiteA_VM01_name -Name $INTNetworkAdapter01 -SwitchName $siteA_INTSwitchname01
-
-Add-VMNetworkAdapter $SiteA_VM02_name -Name $INTNetworkAdapter01
-Connect-VMNetworkAdapter -VMName $SiteA_VM02_name -Name $INTNetworkAdapter01 -SwitchName $siteA_INTSwitchname01
-
-Add-VMNetworkAdapter $SiteB_VM01_name -Name $INTNetworkAdapter01
-Connect-VMNetworkAdapter -VMName $SiteB_VM01_name -Name $INTNetworkAdapter01 -SwitchName $siteB_INTSwitchname01
-
-Add-VMNetworkAdapter $SiteB_VM02_name -Name $INTNetworkAdapter01
-Connect-VMNetworkAdapter -VMName $SiteB_VM02_name -Name $INTNetworkAdapter01 -SwitchName $siteB_INTSwitchname01
-
-
-#Get-VM | Where-Object {$_.Name -like "*CentOS*"} | Start-VM
-#Get-VM
+    Write-LabLog -Message "=== Linux VM の作成が完了しました ===" -Level Success
+    Write-LabLog -Message "注意: 各 VM の OS インストールは手動で行ってください。" -Level Warning
+}
+catch {
+    Write-LabLog -Message "Linux VM 作成中にエラーが発生しました: $_" -Level Error
+    exit 1
+}
