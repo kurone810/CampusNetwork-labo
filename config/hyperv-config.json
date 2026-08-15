@@ -1,0 +1,66 @@
+{
+  "paths": {
+    "vhdPath": "C:\\Users\\Public\\Documents\\Hyper-V\\Virtual hard disks\\",
+    "networkOSIsoPath": "C:\\ISO\\vyos-2026.03-generic-amd64.iso",
+    "serverIsoPath": "C:\\ISO\\17763.3650.221105-1748.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_ja-jp.iso"
+  },
+  "vmNaming": {
+    "networkOS": {
+      "prefix": "NetworkOS",
+      "external": ["ExNetworkOS01-labo", "ExNetworkOS02-labo"],
+      "siteA": ["SiteANetworkOS01-labo", "SiteANetworkOS02-labo"],
+      "siteB": ["SiteBNetworkOS01-labo"]
+    },
+    "server": {
+      "prefix": "Server",
+      "dmz": ["DmzServer01-labo"],
+      "siteA": ["SiteAServer01-labo", "SiteAServer02-labo"],
+      "siteB": ["SiteBServer01-labo", "SiteBServer02-labo"]
+    }
+  },
+  "resources": {
+    "networkOS": {
+      "vhdSizeGB": 10,
+      "memoryMB": 768,
+      "dynamicMemory": false,
+      "generation": 1,
+      "bootDevice": "CD"
+    },
+    "server": {
+      "vhdSizeGB": 20,
+      "memoryMB": 2048,
+      "dynamicMemory": true,
+      "generation": 1,
+      "bootDevice": "CD"
+    }
+  },
+  "switches": {
+    "external": {
+      "name": "EXTSW01",
+      "netAdapterName": "Wi-Fi",
+      "enableIov": true
+    },
+    "core": { "name": "CORSW01", "type": "Internal" },
+    "dmz": { "name": "DMZSW01", "type": "Internal" },
+    "siteAInternal": { "name": "siteA-INTSW01", "type": "Internal" },
+    "siteBInternal": { "name": "siteB-INTSW01", "type": "Internal" },
+    "default": { "name": "Default Switch" }
+  },
+  "networkAdapters": {
+    "external": "EXT-NIC01",
+    "core": "COR-NIC01",
+    "dmz": "DMZ-NIC01",
+    "internal": "INT-NIC01",
+    "default": "ネットワーク アダプター"
+  },
+  "filters": {
+    "networkOS": "*NetworkOS*-labo",
+    "server": "*Server*-labo",
+    "networkOSVhdx": "*NetworkOS*-labo.vhdx",
+    "serverVhdx": "*Server*-labo.vhdx"
+  },
+  "excludedVMs": {
+    "networkOS": "NetworkOS_template",
+    "server": "Server2019-Template"
+  }
+}

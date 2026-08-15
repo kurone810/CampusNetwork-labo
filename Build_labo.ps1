@@ -7,26 +7,24 @@
     
 Start-Process `
     -FilePath "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" `
-    -ArgumentList "-Command .\src\Deploy_VyOS.ps1" `
+    -ArgumentList "-Command .\src\Deploy_NetworkOS.ps1" `
     -NoNewWindow `
     -Wait
 
 Start-Process `
     -FilePath "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" `
-    -ArgumentList "-Command .\src\Deploy_CentOS.ps1" `
+    -ArgumentList "-Command .\src\Deploy_Server.ps1" `
     -NoNewWindow `
     -Wait
 
 Start-Process `
     -FilePath "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" `
-    -ArgumentList "-Command .\src\Start_vyos.ps1" `
+    -ArgumentList "-Command .\src\Start_NetworkOS.ps1" `
     -NoNewWindow `
     -Wait
 
 Start-Process `
     -FilePath "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" `
-    -ArgumentList "-Command .\src\Start_centos.ps1" `
+    -ArgumentList "-Command .\src\Start_Server.ps1" `
     -NoNewWindow `
     -Wait
-
-
