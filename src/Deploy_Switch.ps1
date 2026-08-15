@@ -1,23 +1,27 @@
-# Parameter help description
-param(
-[string]
-$EXTSwitchname01 = "EXTSW01",
-$CORSwitchname01 = "CORSW01",
-$DMZSwitchname01 = "DMZSW01",
-$siteA_INTSwitchname01 = "siteA-INTSW01",
-$siteB_INTSwitchname01 = "siteB-INTSW01",
-$ExSW01_netadaptername = "Wi-Fi"
-)
+#Requires -RunAsAdministrator
 
-#External Switch
-New-VMSwitch $EXTSwitchname01 -NetAdapterName $ExSW01_netadaptername -EnableIov $true
+# Load Hyper-V configuration from external JSON file
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$configPath = Join-Path (Split-Path -Parent $scriptDir) "config\hyperv-config.json"
+$config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
 
-#CoreSwitch
-New-VMSwitch $CORSwitchname01 -SwitchType Internal
+$EXTSwitchname01 = $config.switches.external.name
+$CORSwitchname01 = $config.switches.core.name
+$DMZSwitchname01 = $config.switches.dmz.name
+$siteA_INTSwitchname01 = $config.switches.siteAInternal.name
+$siteB_INTSwitchname01 = $config.switches.siteBInternal.name
+$ExSW01_netadaptername = $config.switches.external.netAdapterName
+$enableIov = $config.switches.external.enableIov
 
-#DMZSwitch
-New-VMSwitch $DMZSwitchname01 -SwitchType Internal
+# External Switch
+New-VMSwitch $EXTSwitchname01 -NetAdapterName $ExSW01_netadaptername -EnableIov $enableIov
 
-#Internalswitch
-New-VMSwitch $siteA_INTSwitchname01 -SwitchType Internal
-New-VMSwitch $siteB_INTSwitchname01 -SwitchType Internal
+# Core Switch
+New-VMSwitch $CORSwitchname01 -SwitchType $config.switches.core.type
+
+# DMZ Switch
+New-VMSwitch $DMZSwitchname01 -SwitchType $config.switches.dmz.type
+
+# Internal Switches
+New-VMSwitch $siteA_INTSwitchname01 -SwitchType $config.switches.siteAInternal.type
+New-VMSwitch $siteB_INTSwitchname01 -SwitchType $config.switches.siteBInternal.type
