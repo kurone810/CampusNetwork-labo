@@ -10,6 +10,7 @@ $CORSwitchname01 = $config.switches.core.name
 $DMZSwitchname01 = $config.switches.dmz.name
 $siteA_INTSwitchname01 = $config.switches.siteAInternal.name
 $siteB_INTSwitchname01 = $config.switches.siteBInternal.name
+$MGMTSwitchname01 = $config.switches.management.name
 $ExSW01_netadaptername = $config.switches.external.netAdapterName
 $enableIov = $config.switches.external.enableIov
 
@@ -25,3 +26,6 @@ New-VMSwitch $DMZSwitchname01 -SwitchType $config.switches.dmz.type
 # Internal Switches
 New-VMSwitch $siteA_INTSwitchname01 -SwitchType $config.switches.siteAInternal.type
 New-VMSwitch $siteB_INTSwitchname01 -SwitchType $config.switches.siteBInternal.type
+
+# Management Switch
+New-VMSwitch $MGMTSwitchname01 -SwitchType $config.switches.management.type

@@ -27,11 +27,16 @@
       loop: "{{ static_routes }}"
       when: static_routes is defined and static_routes | length > 0
 
-    - name: Configure OSPF
+    - name: Configure OSPF router ID
       vyos.vyos.vyos_config:
         lines:
           - "set protocols ospf parameters router-id {{ ospf.router_id }}"
-          - "set protocols ospf area {{ item.id }} network {{ item.network }}"
+      when: ospf is defined and ospf.enabled
+
+    - name: Configure OSPF area networks
+      vyos.vyos.vyos_config:
+        lines:
+          - "set protocols ospf area {{ item.0.id }} network {{ item.1 }}"
       loop: "{{ ospf.areas | subelements('networks') }}"
       when: ospf is defined and ospf.enabled
 

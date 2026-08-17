@@ -20,8 +20,10 @@ interfaces:
     description: DMZ-NIC01
     address: 172.16.10.4/24
 
+# Static routes
 static_routes: []
 
+# OSPF configuration
 ospf:
   enabled: true
   router_id: 172.16.0.2

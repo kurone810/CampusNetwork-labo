@@ -21,11 +21,11 @@ $bootDevice = $config.resources.server.bootDevice
 $DMZSwitchname01 = $config.switches.dmz.name
 $siteA_INTSwitchname01 = $config.switches.siteAInternal.name
 $siteB_INTSwitchname01 = $config.switches.siteBInternal.name
+$MGMTSwitchname01 = $config.switches.management.name
 
 $DMZNetworkAdapter01 = $config.networkAdapters.dmz
 $INTNetworkAdapter01 = $config.networkAdapters.internal
 $MGMTNetworkAdapter01 = $config.networkAdapters.management
-$DefaultSwitchname = $config.switches.default.name
 
 function New-ServerVM {
     param(
@@ -46,7 +46,7 @@ function New-ServerVM {
     Connect-VMNetworkAdapter -VMName $Name -Name $AdapterName -SwitchName $SwitchName
 
     Add-VMNetworkAdapter -VMName $Name -Name $MGMTNetworkAdapter01
-    Connect-VMNetworkAdapter -VMName $Name -Name $MGMTNetworkAdapter01 -SwitchName $DefaultSwitchname
+    Connect-VMNetworkAdapter -VMName $Name -Name $MGMTNetworkAdapter01 -SwitchName $MGMTSwitchname01
 }
 
 foreach ($vm in $dmzVMs) {

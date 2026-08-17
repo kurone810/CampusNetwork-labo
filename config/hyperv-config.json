@@ -44,6 +44,7 @@
     "dmz": { "name": "DMZSW01", "type": "Internal" },
     "siteAInternal": { "name": "siteA-INTSW01", "type": "Internal" },
     "siteBInternal": { "name": "siteB-INTSW01", "type": "Internal" },
+    "management": { "name": "MGMTSW", "type": "Internal" },
     "default": { "name": "Default Switch" }
   },
   "networkAdapters": {
