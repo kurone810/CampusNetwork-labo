@@ -1,0 +1,34 @@
+---
+# Host-specific variables for ExNetworkOS01-labo
+
+# Interface mapping
+# eth0: COR-NIC01 (core)
+# eth1: EXT-NIC01 (external)
+# eth2: MGMT-NIC01 (management via MGMTSW)
+# eth3: DMZ-NIC01 (DMZ)
+interfaces:
+  - name: eth0
+    description: COR-NIC01
+    address: 172.16.0.1/24
+  - name: eth1
+    description: EXT-NIC01
+    address: 172.16.10.1/24
+  - name: eth2
+    description: MGMT-NIC01
+    address: 192.168.255.11/24
+  - name: eth3
+    description: DMZ-NIC01
+    address: 172.16.10.2/24
+
+# Static routes
+static_routes: []
+
+# OSPF configuration
+ospf:
+  enabled: true
+  router_id: 172.16.0.1
+  areas:
+    - id: 0
+      networks:
+        - 172.16.0.0/24
+        - 172.16.10.0/24

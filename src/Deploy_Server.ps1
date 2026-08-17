@@ -24,6 +24,8 @@ $siteB_INTSwitchname01 = $config.switches.siteBInternal.name
 
 $DMZNetworkAdapter01 = $config.networkAdapters.dmz
 $INTNetworkAdapter01 = $config.networkAdapters.internal
+$MGMTNetworkAdapter01 = $config.networkAdapters.management
+$DefaultSwitchname = $config.switches.default.name
 
 function New-ServerVM {
     param(
@@ -42,6 +44,9 @@ function New-ServerVM {
 
     Add-VMNetworkAdapter -VMName $Name -Name $AdapterName
     Connect-VMNetworkAdapter -VMName $Name -Name $AdapterName -SwitchName $SwitchName
+
+    Add-VMNetworkAdapter -VMName $Name -Name $MGMTNetworkAdapter01
+    Connect-VMNetworkAdapter -VMName $Name -Name $MGMTNetworkAdapter01 -SwitchName $DefaultSwitchname
 }
 
 foreach ($vm in $dmzVMs) {

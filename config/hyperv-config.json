@@ -51,7 +51,8 @@
     "core": "COR-NIC01",
     "dmz": "DMZ-NIC01",
     "internal": "INT-NIC01",
-    "default": "ネットワーク アダプター"
+    "default": "ネットワーク アダプター",
+    "management": "MGMT-NIC01"
   },
   "filters": {
     "networkOS": "*NetworkOS*-labo",

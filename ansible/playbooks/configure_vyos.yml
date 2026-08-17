@@ -1,0 +1,40 @@
+---
+- name: Configure VyOS routers
+  hosts: vyos
+  gather_facts: no
+  connection: network_cli
+
+  tasks:
+    - name: Configure management interface
+      vyos.vyos.vyos_config:
+        lines:
+          - "set interfaces ethernet {{ mgmt_interface }} description 'MGMT-NIC01'"
+          - "set interfaces ethernet {{ mgmt_interface }} address '{{ mgmt_ip }}'"
+      when: mgmt_ip is defined
+
+    - name: Configure interfaces
+      vyos.vyos.vyos_config:
+        lines:
+          - "set interfaces ethernet {{ item.name }} description '{{ item.description }}'"
+          - "set interfaces ethernet {{ item.name }} address '{{ item.address }}'"
+      loop: "{{ interfaces }}"
+      when: interfaces is defined
+
+    - name: Configure static routes
+      vyos.vyos.vyos_config:
+        lines:
+          - "set protocols static route {{ item.destination }} next-hop {{ item.next_hop }}"
+      loop: "{{ static_routes }}"
+      when: static_routes is defined and static_routes | length > 0
+
+    - name: Configure OSPF
+      vyos.vyos.vyos_config:
+        lines:
+          - "set protocols ospf parameters router-id {{ ospf.router_id }}"
+          - "set protocols ospf area {{ item.id }} network {{ item.network }}"
+      loop: "{{ ospf.areas | subelements('networks') }}"
+      when: ospf is defined and ospf.enabled
+
+    - name: Commit configuration
+      vyos.vyos.vyos_config:
+        save: yes
