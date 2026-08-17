@@ -5,6 +5,13 @@
   connection: network_cli
 
   tasks:
+    - name: Configure management interface
+      vyos.vyos.vyos_config:
+        lines:
+          - "set interfaces ethernet {{ mgmt_interface }} description 'MGMT-NIC01'"
+          - "set interfaces ethernet {{ mgmt_interface }} address '{{ mgmt_ip }}'"
+      when: mgmt_ip is defined
+
     - name: Configure interfaces
       vyos.vyos.vyos_config:
         lines:
