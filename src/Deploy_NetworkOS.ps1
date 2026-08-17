@@ -23,13 +23,13 @@ $CORSwitchname01 = $config.switches.core.name
 $DMZSwitchname01 = $config.switches.dmz.name
 $siteA_INTSwitchname01 = $config.switches.siteAInternal.name
 $siteB_INTSwitchname01 = $config.switches.siteBInternal.name
+$MGMTSwitchname01 = $config.switches.management.name
 
 $EXTNetworkAdapter01 = $config.networkAdapters.external
 $CORNetworkAdapter01 = $config.networkAdapters.core
 $DMZNetworkAdapter01 = $config.networkAdapters.dmz
 $INTNetworkAdapter01 = $config.networkAdapters.internal
 $MGMTNetworkAdapter01 = $config.networkAdapters.management
-$DefaultSwitchname = $config.switches.default.name
 
 function New-NetworkOSVM {
     param(
@@ -50,7 +50,7 @@ function New-NetworkOSVM {
     Connect-VMNetworkAdapter -VMName $Name -Name $CORNetworkAdapter01 -SwitchName $CORSwitchname01
 
     Add-VMNetworkAdapter -VMName $Name -Name $MGMTNetworkAdapter01
-    Connect-VMNetworkAdapter -VMName $Name -Name $MGMTNetworkAdapter01 -SwitchName $DefaultSwitchname
+    Connect-VMNetworkAdapter -VMName $Name -Name $MGMTNetworkAdapter01 -SwitchName $MGMTSwitchname01
 
     foreach ($adapter in $ExtraAdapters) {
         $adapterName = $adapter.Name

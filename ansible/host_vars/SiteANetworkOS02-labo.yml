@@ -1,6 +1,10 @@
 ---
 # Host-specific variables for SiteANetworkOS02-labo
 
+# Interface mapping
+# eth0: COR-NIC01 (core)
+# eth1: INT-NIC01 (site A internal)
+# eth2: MGMT-NIC01 (management via MGMTSW)
 interfaces:
   - name: eth0
     description: COR-NIC01
@@ -12,8 +16,10 @@ interfaces:
     description: MGMT-NIC01
     address: 192.168.255.22/24
 
+# Static routes
 static_routes: []
 
+# OSPF configuration
 ospf:
   enabled: true
   router_id: 172.16.0.11
