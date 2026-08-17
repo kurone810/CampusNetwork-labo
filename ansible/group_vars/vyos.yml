@@ -1,0 +1,25 @@
+---
+# Common variables for VyOS hosts
+
+# Default VyOS credentials (change after initial setup)
+vyos_user: vyos
+vyos_password: vyos
+
+# Management network (Default Switch)
+management_subnet: 192.168.255.0/24
+
+# Core network (CORSW01)
+core_subnet: 172.16.0.0/24
+
+# DMZ network (DMZSW01)
+dmz_subnet: 172.16.10.0/24
+
+# Site internal networks
+sitea_subnet: 172.16.100.0/24
+siteb_subnet: 172.16.200.0/24
+
+# Interface mapping for VyOS VMs
+# eth0: COR-NIC01 (core)
+# eth1: EXT-NIC01 or INT-NIC01 (site/internal)
+# eth2: DMZ-NIC01 (external only)
+# eth3: MGMT-NIC01 (management via Default Switch)
